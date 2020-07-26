@@ -41,8 +41,8 @@ function getCamera() {
  **/
 
 function getLight() {
-  light = new THREE.PointLight(0xffffff, 1, 0);
-  light.position.set(1, 1, 1);
+  light = new THREE.PointLight(0xffffff, 0.4, 0);
+  light.position.set(112, 310, -219);
   scene.add(light);
 
   dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
@@ -64,8 +64,8 @@ function getLight() {
   scene.add(ambientLight);
 
   //this is the fill light
-  fillLight = new THREE.DirectionalLight(0x111111, 1.2);
-  fillLight.position.set(100, 0, -9900);
+  fillLight = new THREE.DirectionalLight(0x111111, 1.24);
+  fillLight.position.set(399, -43, -21);
   scene.add(fillLight);
 
   //this is the back light
@@ -73,9 +73,9 @@ function getLight() {
   backLight.position.set(-3072, 4868, 2000).normalize();
   scene.add(backLight);
 
-  // light.castShadow = true;
-  // light.shadow.camera.near = 0.1;
-  // light.shadow.camera.far = 500;
+  light.castShadow = true;
+  light.shadow.camera.near = 0.1;
+  light.shadow.camera.far = 500;
 
 
 
