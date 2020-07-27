@@ -3,6 +3,36 @@ let fillLight;
 let backLight;
 let dirLight;
 
+let scene = getScene();
+let camera;
+let secondCamera;
+
+let renderer = getRenderer();
+let controls
+let trainModel
+let firstSceneObj = [camera, light, fillLight, backLight, dirLight, trainModel]
+
+init();
+addControl()
+
+function reset_scene() {
+  console.log('Reset the Scene');
+  for (let i = scene.children.length - 1; i >= 0; i--) {
+      let obj = scene.children[i];
+      scene.remove(obj);
+  }
+  // scene.remove(trainModel);
+}
+
+function init() {
+  camera = getCamera();
+  getOrbitControl();
+  loadTrainModel()
+  getLight();
+
+  render();
+
+}
 
 function getScene() {
   var scene = new THREE.Scene();
@@ -22,14 +52,13 @@ function getScene() {
  *     clipping plane are culled from the scene
  **/
 
+
 function getCamera() {
   var aspectRatio = window.innerWidth / window.innerHeight;
   var camera = new THREE.PerspectiveCamera(50, 1.481073, 0.01, 10000);
   camera.position.set(-662, 212, -3);
-
   // console.log(camera.rotation)
   return camera;
-
 }
 
 /**
@@ -40,12 +69,31 @@ function getCamera() {
  * @param {obj} scene: the current scene object
  **/
 
+
+function getOrbitControl() {
+  controls = new THREE.OrbitControls(camera);
+  controls.rotateSpeed = 0.1;
+  controls.zoomSpeed = 0.4;
+
+  controls.minDistance = 3;
+  controls.maxDistance = Infinity;
+
+  controls.minPolarAngle = 0; // radians
+  controls.maxPolarAngle = Math.PI / 2; // radians
+
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+
+  controls.target.set(0, 120, 0);
+
+}
+
 function getLight() {
-  light = new THREE.PointLight(0xffffff, 0.4, 0);
+  light = new THREE.PointLight(0xffffff, 0.8, 0);
   light.position.set(112, 310, -219);
   scene.add(light);
 
-  dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight = new THREE.DirectionalLight(0xffffff, 3);
   dirLight.color.setHSL(0.1, 1, 0.95);
   dirLight.position.set(848, -3955, -1749);
   dirLight.position.multiplyScalar(50);
@@ -59,24 +107,23 @@ function getLight() {
   scene.add(dirLight);
 
   //tyis is the amibient light
-  let ambientLight = new THREE.AmbientLight(0x111111, 5.5);
-  // ambientLight.position.set(2100, 20000, 6000);
+  let ambientLight = new THREE.AmbientLight(0x111111, 10);
+  ambientLight.position.set(200, 230, 6000);
   scene.add(ambientLight);
 
   //this is the fill light
-  fillLight = new THREE.DirectionalLight(0x111111, 1.24);
+  fillLight = new THREE.DirectionalLight(0x111111, 4);
   fillLight.position.set(399, -43, -21);
   scene.add(fillLight);
 
   //this is the back light
-  backLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  backLight = new THREE.DirectionalLight(0xffffff, 5);
   backLight.position.set(-3072, 4868, 2000).normalize();
   scene.add(backLight);
 
   light.castShadow = true;
   light.shadow.camera.near = 0.1;
   light.shadow.camera.far = 500;
-
 
 
   //this is the fog
@@ -107,25 +154,18 @@ function getRenderer() {
  * @param {obj} camera: the three.js camera for the scene
  * @param {obj} renderer: the three.js renderer for the scene
  **/
-//
-// function getControls(camera, renderer) {
-//   var controls = new THREE.TrackballControls(camera, renderer.domElement);
-//   controls.zoomSpeed = 0.4;
-//   controls.panSpeed = 0.4;
-//   return controls;
-// }
-
 
 
 /**
  * Load Nimrud model
  **/
 
-function loadModel() {
+function loadTrainModel() {
   var loader = new THREE.GLTFLoader();
   loader.load('/models/train.glb', function(gltf) {
     // object.rotation.z = Math.PI;
-    scene.add(gltf.scene);
+    trainModel = gltf.scene
+    scene.add(trainModel);
     document.querySelector('h1').style.display = 'none';
   }, undefined, function(error) {
     console.error(error);
@@ -133,6 +173,13 @@ function loadModel() {
 }
 
 function addControl() {
+  let options = {
+    clear: reset_scene,
+    loadFirstScene:init,
+    loadSecondScene: loadSecondScene
+
+    // Next Scene:
+  };
 
   let gui = new dat.GUI();
   let mainLightPosition = gui.addFolder('Lights');
@@ -164,6 +211,10 @@ function addControl() {
 
   mainLightPosition.open();
   fillLightControl.open();
+  gui.add(options, 'clear');
+  gui.add(options, 'loadFirstScene');
+  gui.add(options, 'loadSecondScene');
+  // gui.add(options, 'Next scene');
 
 }
 /**
@@ -171,34 +222,71 @@ function addControl() {
  **/
 
 function render() {
-
   requestAnimationFrame(render);
   renderer.render(scene, camera);
-  console.log(camera.position);
-
+  console.log(camera.position)
   controls.update();
 };
 
-var scene = getScene();
-var camera = getCamera();
 
-var renderer = getRenderer();
-var controls = new THREE.OrbitControls(camera);
-controls.rotateSpeed = 0.1;
-controls.zoomSpeed = 0.4;
+//scene Two
 
-controls.minDistance = 3;
-controls.maxDistance = Infinity;
+//load model(
 
-controls.minPolarAngle = 0; // radians
-controls.maxPolarAngle = Math.PI / 2; // radians
+function loadSecondScene() {
+  loadTicketMachine()
+  getLight();
+  camera = getSecondCamera();
+  getSecondOrbitControl();
+  // addControl()
 
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
+  render();
 
-controls.target.set(0, 120, 0);
+}
 
-loadModel()
-getLight();
-addControl()
-render();
+function getSecondOrbitControl() {
+  controls = new THREE.OrbitControls(camera);
+  controls.rotateSpeed = 0.1;
+  controls.zoomSpeed = 0.4;
+
+  controls.minDistance = 3;
+  controls.maxDistance = Infinity;
+
+  controls.minPolarAngle = 0; // radians
+  controls.maxPolarAngle = Math.PI / 2; // radians
+
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+
+  controls.target.set(0, 70, 0);
+
+}
+
+function loadTicketMachine() {
+  var loader = new THREE.GLTFLoader();
+  loader.load('/models/ticketmachine.glb', function(gltf) {
+    scene.add(gltf.scene);
+    document.querySelector('h1').style.display = 'none';
+  }, undefined, function(error) {
+    console.error(error);
+  });
+}
+
+function getLightStation() {
+  let spotLight_2 = new THREE.PointLight(0xffffff, 0.2, 0);
+  light.position.set(0, 10, 0);
+  scene.add(light);
+
+  let ambientLight_2 = new THREE.AmbientLight(0x111111, 5.5);
+  ambientLight_2.position.set(200, 230, 100);
+  scene.add(ambientLight_2);
+}
+
+function getSecondCamera() {
+  var aspectRatio = window.innerWidth / window.innerHeight;
+  var secondCamera = new THREE.PerspectiveCamera(50, 1.481073, 0.01, 10000);
+  secondCamera.position.set(5881, 5102, -6389);
+
+
+  return secondCamera;
+}
